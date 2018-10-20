@@ -1,0 +1,10 @@
+{
+    "terminal.integrated.env.linux": {
+        "PATH": "/home/jm/.platformio/penv/bin:/home/jm/.platformio/penv:/home/jm/bin:/home/jm/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/usr/local/go/bin:/home/jm/go/bin:/usr/local/go/bin:/home/jm/go/bin",
+        "PLATFORMIO_CALLER": "vscode"
+    },
+    "files.associations": {
+        "string.h": "c",
+        "*.inc": "c"
+    }
+}

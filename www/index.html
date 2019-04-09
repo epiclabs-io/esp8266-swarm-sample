@@ -1,0 +1,190 @@
+<html>
+
+<head>
+    <script src="js/Chart.min.js"></script>
+    <script>
+        /**
+ * MIT License
+ *
+ * Copyright (c) 2018 Epic Labs, epiclabs.io
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+
+        var topicName = "temperature"; // must match the topic name given in main.cpp
+        var userAddress = "0x3825b0bB6CAc22BFb68aBec0863a2dF03EdF66e9" // must be the address corresponding to the private key in config.h
+        var swarmHost = "https://swarm-gateways.net"
+
+
+        function request(type, url, opts, callback) {
+            var xhr = new XMLHttpRequest(),
+                fd;
+
+            if (typeof opts === 'function') {
+                callback = opts;
+                opts = null;
+            }
+
+            xhr.open(type, url);
+            xhr.setRequestHeader("Accept", "application/octet-stream");
+
+            if (type === 'POST' && opts) {
+                fd = new FormData();
+
+                for (var key in opts) {
+                    fd.append(key, JSON.stringify(opts[key]));
+                }
+            }
+
+            xhr.onload = function () {
+                callback(JSON.parse(xhr.response));
+            };
+
+            xhr.send(opts ? fd : null);
+        }
+
+        function timeLabel(timestamp) {
+            var d = new Date(timestamp * 1000);
+            return d.toLocaleTimeString();
+        }
+
+        var chart;
+        function init() {
+            var temps = [];
+            var FEED_URL = swarmHost + "/bzz-feed:/?user=" + userAddress + "&name=" + topicName;
+
+            function sample(timestamp, callback) {
+                var point = {
+                    timestamp: timestamp,
+                    temperature: 0,
+                }
+                request("GET", FEED_URL + "&time=" + timestamp, function (data) {
+                    if (data && data.temperature) {
+                        point.temperature = data.temperature;
+                        if (callback) {
+                            callback(point);
+                            return;
+                        }
+                        var labels = chart.data.labels;
+                        for (var i = 0; i < temps.length; i++) {
+                            if (point.timestamp < temps[i].timestamp) {
+                                temps.splice(i, 0, point);
+                                labels.splice(i, 0, timeLabel(point.timestamp));
+                                chart.data.datasets[0].data.splice(i, 0, point.temperature);
+                                return;
+                            }
+                        }
+
+                        temps.push(point);
+                        labels.push(timeLabel(point.timestamp));
+                        chart.data.datasets[0].data.push(point.temperature);
+
+                    }
+                });
+                return point;
+            }
+
+
+            time = Math.floor(Date.now() / 1000);
+
+            for (var t = time; t > time - 3600 * 16; t -= 300) {
+                temps.push(sample(t));
+            }
+
+            var maxpoints = 360;
+
+            setInterval(function () {
+                sample(Math.floor(Date.now() / 1000), function (point) {
+                    temps.push(point);
+                    chart.data.labels.push(timeLabel(point.timestamp));
+                    chart.data.datasets[0].data.push(point.temperature);
+
+                    if (chart.data.labels.length > maxpoints) {
+                        chart.data.labels = chart.data.labels.slice(1, maxpoints + 1);
+                        chart.data.datasets[0].data = chart.data.datasets[0].data.slice(1, maxpoints + 1);
+                    }
+
+                    chart.update({ duration: 0 });
+
+                    var currentTemp = document.getElementById("currentTemp");
+                    currentTemp.innerHTML = "Current Temperature: " + point.temperature + " &deg;C";
+
+                });
+
+            }, 10000);
+        }
+
+    </script>
+
+</head>
+
+<body>
+    <div class="chart-container" style="position: relative; height:40vh; width:80vw">
+        <canvas id="myChart"></canvas>
+    </div>
+    <h2>
+        <div id="currentTemp" style="position: relative; top:50px; left:100px"></div>
+    </h2>
+    <script>
+        var ctx = document.getElementById("myChart").getContext('2d');
+        chart = new Chart(ctx, {
+            responsive: true,
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Temperature',
+                    pointRadius: 0,
+                    data: [],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(255,99,132,1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    }]
+                }
+            }
+        });
+        chart.canvas.parentNode.style.height = '128px';
+        init();
+    </script>
+</body>
+
+</html>

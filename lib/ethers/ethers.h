@@ -54,16 +54,13 @@ typedef struct Transaction {
 
 #ifdef __cplusplus
 extern "C" {
-#endif  /* __cplusplus */
+#endif /* __cplusplus */
 
+bool ethers_decodeTransaction(Transaction *transaction, uint8_t *data, uint16_t length);
 
-bool ethers_decodeTransaction(Transaction* transaction, uint8_t * data, uint16_t length);
-
-
-#define ETHERS_PRIVATEKEY_LENGTH       32
-#define ETHERS_PUBLICKEY_LENGTH        64
-#define ETHERS_ADDRESS_LENGTH          20
-
+#define ETHERS_PRIVATEKEY_LENGTH 32
+#define ETHERS_PUBLICKEY_LENGTH 64
+#define ETHERS_ADDRESS_LENGTH 20
 
 bool ethers_privateKeyToAddress(const uint8_t *privateKey, uint8_t *address);
 
@@ -76,7 +73,7 @@ bool ethers_privateKeyToChecksumAddress(const uint8_t *privateKey, char *address
 //       parameters as the same buffer (it can compute it in-place)
 void ethers_addressToChecksumAddress(const uint8_t *address, char *checksumAddress);
 
-#define ETHERS_KECCAK256_LENGTH        32
+#define ETHERS_KECCAK256_LENGTH 32
 
 void ethers_keccak256(const uint8_t *data, uint16_t length, uint8_t *result);
 
@@ -84,22 +81,18 @@ void ethers_keccak256(const uint8_t *data, uint16_t length, uint8_t *result);
 
 uint8_t *ethers_debug();
 
-#define ETHERS_SIGNATURE_LENGTH        64
+#define ETHERS_SIGNATURE_LENGTH 65
 
 bool ethers_sign(const uint8_t *privateKey, const uint8_t *digest, uint8_t *result);
-
 
 uint8_t ethers_getStringLength(uint8_t *value, uint8_t length);
 uint8_t ethers_toString(uint8_t *amountWei, uint8_t amountWeiLength, uint8_t skipDecimal, char *result);
 
-
 uint16_t ethers_getHexStringLength(uint16_t length);
 void ethers_toHexString(uint8_t *value, uint16_t length, char *result);
 
-
 #ifdef __cplusplus
 }
-#endif  /* __cplusplus */
-
+#endif /* __cplusplus */
 
 #endif
